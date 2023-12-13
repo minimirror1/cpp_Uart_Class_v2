@@ -9,7 +9,7 @@
 #define INC_UART_Class_H_
 
 #include "main.h"
-#include "cpp_tick.h"
+#include "../cpp_tick/cpp_tick.h"	//외부 의존성
 
 #define UART_BUFF_CNT 4096
 
