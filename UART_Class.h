@@ -11,7 +11,7 @@
 #include "main.h"
 #include "../cpp_tick/cpp_tick.h"	//외부 의존성
 
-#define UART_BUFF_CNT 4096
+#define UART_BUFF_CNT 4096*2
 
 typedef enum _BuffStatus_TypeDef{
 	BUFF_EMPTY = 0,
