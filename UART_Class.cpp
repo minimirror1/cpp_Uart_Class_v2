@@ -51,6 +51,10 @@ void Serial::rxLed_Check() {
         rxLed_off();
 }
 
+void Serial::loop() {
+	rxLed_Check();
+}
+
 void Serial::rxAppointment() {
     HAL_UART_Receive_IT(huart_, &rxData_, 1);
 }
