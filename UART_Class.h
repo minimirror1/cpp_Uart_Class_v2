@@ -11,6 +11,27 @@
 #include "main.h"
 #include "../cpp_tick/cpp_tick.h"
 
+/*
+종속성
+1. cpp_tick.h
+https://github.com/minimirror1/cpp_tick
+
+포팅.
+Uart callback 연결 코드
+1. main.c 에서 main 함수 아래 코드 추가 (다른곳도 가능)
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	serial1.TxCpltCallback(huart);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	serial1.RxCpltCallback(huart);
+}
+
+2. 루프 안에 추가할 코드 (주기적으로 호출되는 위치에 추가)
+serial1.loop();
+*/
+
+
 #define UART_BUFF_CNT 4096*2
 
 typedef enum _BuffStatus_TypeDef {
@@ -59,6 +80,9 @@ private:
     void rxAppointment();
     int ring_buffer_usage(SerialByteBuff* rb);
 
+	/* LED control */
+    void rxLed_Check();
+
 public:
     Serial();
     ~Serial();
@@ -69,10 +93,8 @@ public:
     void init_rxLed(GPIO_TypeDef *Port, uint16_t Pin, GPIO_PinState OnState);
     void init_rs485(GPIO_TypeDef *Port, uint16_t Pin);
 
-    /* LED control */
-    void rxLed_Check();
-
     /* UART control */
+	void loop();
     void rxAppointCheck();
     void RxCpltCallback(UART_HandleTypeDef *huart);
     BuffStatus_TypeDef popRxBuff(uint8_t *pData);

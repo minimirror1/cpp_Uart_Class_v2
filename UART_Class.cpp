@@ -1,37 +1,5 @@
 #include "UART_Class.h"
 
-/* LED 관련 함수 구현 */
-void Serial::rxLed_on() {
-    if(rxLed.init != true) return;
-    HAL_GPIO_WritePin(rxLed.Port_, rxLed.Pin_, rxLed.OnState_);
-}
-
-void Serial::rxLed_off() {
-    if(rxLed.init != true) return;
-    HAL_GPIO_WritePin(rxLed.Port_, rxLed.Pin_, rxLed.OffState_);
-}
-
-void Serial::txLed_on() {
-    if(txLed.init != true) return;
-    HAL_GPIO_WritePin(txLed.Port_, txLed.Pin_, txLed.OnState_);
-    rxLed_off_Tick.tickUpdate();
-}
-
-void Serial::txLed_off() {
-    if(txLed.init != true) return;
-    HAL_GPIO_WritePin(txLed.Port_, txLed.Pin_, txLed.OffState_);
-}
-
-/* RS485 관련 함수 구현 */
-void Serial::rs485_txMode() {
-    if(rs485.init != true) return;
-    HAL_GPIO_WritePin(rs485.Port_, rs485.Pin_, GPIO_PIN_SET);
-}
-
-void Serial::rs485_rxMode() {
-    if(rs485.init != true) return;
-    HAL_GPIO_WritePin(rs485.Port_, rs485.Pin_, GPIO_PIN_RESET);
-}
 
 /* 생성자 및 소멸자 */
 Serial::Serial() {
@@ -195,3 +163,37 @@ uint8_t Serial::read() {
     return ret;
 }
 
+
+
+/* LED 관련 함수 구현 */
+void Serial::rxLed_on() {
+    if(rxLed.init != true) return;
+    HAL_GPIO_WritePin(rxLed.Port_, rxLed.Pin_, rxLed.OnState_);
+}
+
+void Serial::rxLed_off() {
+    if(rxLed.init != true) return;
+    HAL_GPIO_WritePin(rxLed.Port_, rxLed.Pin_, rxLed.OffState_);
+}
+
+void Serial::txLed_on() {
+    if(txLed.init != true) return;
+    HAL_GPIO_WritePin(txLed.Port_, txLed.Pin_, txLed.OnState_);
+    rxLed_off_Tick.tickUpdate();
+}
+
+void Serial::txLed_off() {
+    if(txLed.init != true) return;
+    HAL_GPIO_WritePin(txLed.Port_, txLed.Pin_, txLed.OffState_);
+}
+
+/* RS485 관련 함수 구현 */
+void Serial::rs485_txMode() {
+    if(rs485.init != true) return;
+    HAL_GPIO_WritePin(rs485.Port_, rs485.Pin_, GPIO_PIN_SET);
+}
+
+void Serial::rs485_rxMode() {
+    if(rs485.init != true) return;
+    HAL_GPIO_WritePin(rs485.Port_, rs485.Pin_, GPIO_PIN_RESET);
+}
