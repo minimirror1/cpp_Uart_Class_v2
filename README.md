@@ -43,6 +43,7 @@ serial1.RxCpltCallback(huart);
 
 ### 3. 메인 루프에서 호출
 주기적으로 호출되는 위치에 다음 코드를 추가하세요:
+
 예를들어 main 함수 안에 추가할 경우 while 루프 안에 추가합니다.
 ```cpp
 serial1.loop();
