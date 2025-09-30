@@ -31,6 +31,8 @@ struct SerialByteBuff{
 /*
 porting 1. init 함수에 CUBE_MX초기화가 끝난 huart와 _IRQn 을 전달한다.
 porting 2. while loop 에 Parsing_Process 를 추가한다.
+
+=== IT 모드 (기존 방식 - 인터럽트) ===
 Serial example_1(1);
 int cpp_main()
 {
@@ -40,14 +42,24 @@ int cpp_main()
 	}
 }
 
-porting 3. HAL_UART_  CpltCallback  안에 TxCpltCallback, RxCpltCallback 를 추가한다.
+=== DMA 모드 (권장 - 1바이트 DMA 수신) ===
+Serial example_1(1);
+int cpp_main()
+{
+	example_1.init_DMA(&huart1, USART1_IRQn);  // init 대신 init_DMA 사용
+	while (1){
+		example_1.Parsing_Process(); //<<--
+	}
+}
+
+porting 3. HAL_UART_ CpltCallback 안에 TxCpltCallback, RxCpltCallback를 추가한다.
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 	example_1.TxCpltCallback(huart);
 }
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-	example_1.RxCpltCallback(huart);
-}
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+	example_1.RxCpltCallback(huart);  // IT, DMA 모드 공용
+}
 
  */
 
@@ -72,6 +84,9 @@ private :
 	SerialByteBuff txBuff;
 	SerialByteBuff rxBuff;
 	uint8_t rxData_;
+	
+	//dma mode
+	bool useDma_;                 // DMA 모드 사용 여부 (false: IT, true: DMA)
 
 	//gpio
 	GPIO_Ctr txLed;
@@ -113,10 +128,11 @@ public :
 		txLed.init = false;
 		rxLed.init = false;
 		rs485.init = false;
+		useDma_ = false;
 	}//전역으로 설정하고 HAL init 후 Serial init 호출하여야 한다.
 	~Serial(){}
 
-	/* init */
+	/* init - IT 모드 (기존 방식) */
 	void init(UART_HandleTypeDef *huart, IRQn_Type UART_IRQn){
 		huart_ = huart;
 		UART_IRQn_ = UART_IRQn;
@@ -124,6 +140,19 @@ public :
 		rxBuff.rear = 0;
 		txBuff.front = 0;
 		txBuff.rear = 0;
+		useDma_ = false;
+		rxAppointment();
+	}
+	
+	/* init with DMA mode - 1바이트 DMA 수신 */
+	void init_DMA(UART_HandleTypeDef *huart, IRQn_Type UART_IRQn){
+		huart_ = huart;
+		UART_IRQn_ = UART_IRQn;
+		rxBuff.front = 0;
+		rxBuff.rear = 0;
+		txBuff.front = 0;
+		txBuff.rear = 0;
+		useDma_ = true;
 		rxAppointment();
 	}
 	void init_txLed(GPIO_TypeDef *Port, uint16_t Pin, GPIO_PinState OnState){
@@ -156,17 +185,26 @@ public :
 
 	/* uart 수신 대기 */
 	void rxAppointment(){
-		//HAL_UART_Receive_DMA(huart_, &rxData_, 1);
-		HAL_UART_Receive_IT(huart_, &rxData_, 1);
-	}
-
-	void rxAppointCheck(){
-		if(huart_->RxState ==HAL_UART_STATE_READY){
+		if(useDma_){
+			// 1바이트 DMA 모드
+			HAL_UART_Receive_DMA(huart_, &rxData_, 1);
+		} else {
+			// 기존 1바이트 IT 모드
 			HAL_UART_Receive_IT(huart_, &rxData_, 1);
 		}
 	}
 
-	/* rx buffer */
+	void rxAppointCheck(){
+		if(huart_->RxState == HAL_UART_STATE_READY){
+			if(useDma_){
+				HAL_UART_Receive_DMA(huart_, &rxData_, 1);
+			} else {
+				HAL_UART_Receive_IT(huart_, &rxData_, 1);
+			}
+		}
+	}
+
+	/* rx buffer - IT 또는 DMA 1바이트 모드 공용 */
 	void RxCpltCallback(UART_HandleTypeDef *huart){
 		if(huart != huart_)
 			return;
@@ -176,6 +214,7 @@ public :
 		rxAppointment();
 		rxLed_on();
 	}
+	
 	BuffStatus_TypeDef popRxBuff(uint8_t *pData){
 		if(rxBuff.front == rxBuff.rear)
 			return BUFF_EMPTY;
